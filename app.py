@@ -9,6 +9,26 @@ login_manager.login_view = "login"
 login_manager.init_app(app)
 
 
+class User:
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return str(self.id)
+    
+    def delete(self):
+        # Implement user deletion logic here
+        pass
+
+
 # @app.route("/register", methods=["GET", "POST"])
 # def register():
 #     if request.method == "POST":
