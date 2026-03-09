@@ -4,10 +4,13 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SECRET_KEY'] = 'your_secret_key'
 
-db = SQLAlchemy(app)
+# i can add config later:
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# app.config['SECRET_KEY'] = 'your_secret_key'
+
+# db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.login_view = "login"
