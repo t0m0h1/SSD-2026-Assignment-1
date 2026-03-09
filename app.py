@@ -9,21 +9,23 @@ login_manager.login_view = "login"
 login_manager.init_app(app)
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        # save user to the database later:
+# @app.route("/register", methods=["GET", "POST"])
+# def register():
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         # save user to the database later:
 
-        flash("Registration successful! Please log in.")
-        return redirect(url_for("login"))
-    return render_template("register.html")
+#         flash("Registration successful! Please log in.")
+#         return redirect(url_for("login"))
+#     return render_template("register.html")
+
 
 # Flask routes
 @app.route("/")
 def home():
     return render_template("home.html")
+
 
 # Login route
 # @app.route("/login", methods=["GET", "POST"])
