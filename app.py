@@ -110,6 +110,7 @@ def login():
 
     return render_template("login.html")
 
+
 # Logout route
 @app.route("/logout")
 @login_required
