@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -16,16 +17,42 @@ login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
+
+
+class AuditLog(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.String(50))
+    action = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# Logging all activities
+def log_action(user, action):
+
+    log = AuditLog(
+        user=user,
+        action=action
+    )
+
+    db.session.add(log)
+    db.session.commit()
+
+
+
 # User model
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
 
+
 # User loader
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
 
 # Routes
 @app.route("/register", methods=["GET", "POST"])
