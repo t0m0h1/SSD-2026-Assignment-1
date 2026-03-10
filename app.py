@@ -55,13 +55,58 @@ def load_user(user_id):
 
 
 # Routes
+
+# Registration route
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
+    if request.method == "POST":
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        existing_user = User.query.filter_by(username=username).first()
+
+        if existing_user:
+            flash("Username already exists")
+            return redirect(url_for("register"))
+
+        hashed_password = generate_password_hash(password)
+
+        new_user = User(
+            username=username,
+            password_hash=hashed_password
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Account created. Please login.")
+        return redirect(url_for("login"))
+
     return render_template("register.html")
 
+
+# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password_hash, password):
+
+            login_user(user)
+            flash("Logged in successfully")
+
+            return redirect(url_for("dashboard"))
+
+        else:
+            flash("Invalid username or password")
 
     return render_template("login.html")
 
@@ -69,6 +114,7 @@ def login():
 @login_required
 def logout():
     return redirect(url_for("login"))
+
 
 @app.route("/dashboard")
 @login_required
