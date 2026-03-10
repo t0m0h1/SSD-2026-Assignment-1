@@ -113,13 +113,15 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
-    return redirect(url_for("login"))
+    logout_user()
+    flash("Logged out successfully")
+    return redirect(url_for("home"))
 
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    return render_template("dashboard.html, user=current_user.username")
 
 
 # Home route
