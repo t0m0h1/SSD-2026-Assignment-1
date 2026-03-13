@@ -1,11 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Add Patient</title>
 </head>
+
 <body>
-    
+
+<h1>Add Patient Record</h1>
+
+<form method="POST">
+
+<label>Patient ID</label>
+<input type="text" name="patient_id" required>
+
+<br><br>
+
+<label>Age</label>
+<input type="number" name="age" required>
+
+<br><br>
+
+<label>Sex</label>
+<select name="sex">
+<option value="male">Male</option>
+<option value="female">Female</option>
+</select>
+
+<br><br>
+
+<label>Blood Pressure</label>
+<input type="text" name="blood_pressure">
+
+<br><br>
+
+<label>Cholesterol</label>
+<input type="text" name="cholesterol">
+
+<br><br>
+
+<label>Fasting Blood Sugar</label>
+<input type="text" name="fasting_blood_sugar">
+
+<br><br>
+
+<label>Resting ECG</label>
+<input type="text" name="resting_ecg">
+
+<br><br>
+
+<label>Angina</label>
+<select name="angina">
+<option value="yes">Yes</option>
+<option value="no">No</option>
+</select>
+
+<br><br>
+
+<button type="submit">Add Patient</button>
+
+</form>
+
+<br>
+
+<a href="{{ url_for('patients.patients') }}">Back to records</a>
+
 </body>
 </html>

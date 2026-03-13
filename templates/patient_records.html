@@ -1,12 +1,69 @@
-<h2>Patient Records</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Records</title>
+</head>
 
-{% for r in records %}
+<body>
 
-<p>
-ID: {{ r.patient_id }}
-Age: {{ r.age }}
-BP: {{ r.blood_pressure }}
-Cholesterol: {{ r.cholesterol }}
-</p>
+<h1>Patient Records</h1>
+
+<a href="{{ url_for('patients.add_patient') }}">Add New Patient</a>
+
+<br><br>
+
+<table border="1">
+
+<tr>
+    <th>ID</th>
+    <th>Patient ID</th>
+    <th>Age</th>
+    <th>Sex</th>
+    <th>Blood Pressure</th>
+    <th>Cholesterol</th>
+    <th>Actions</th>
+</tr>
+
+{% for record in records %}
+
+<tr>
+
+<td>{{ record.id }}</td>
+<td>{{ record.patient_id }}</td>
+<td>{{ record.age }}</td>
+<td>{{ record.sex }}</td>
+
+<form action="{{ url_for('patients.update_patient', id=record.id) }}" method="POST">
+
+<td>
+<input type="text" name="blood_pressure" value="{{ record.blood_pressure }}">
+</td>
+
+<td>
+<input type="text" name="cholesterol" value="{{ record.cholesterol }}">
+</td>
+
+<td>
+
+<button type="submit">Update</button>
+
+</form>
+
+{% if current_user.role == "admin" %}
+
+<form action="{{ url_for('patients.delete_patient', id=record.id) }}" method="GET" style="display:inline;">
+<button type="submit">Delete</button>
+</form>
+
+{% endif %}
+
+</td>
+
+</tr>
 
 {% endfor %}
+
+</table>
+
+</body>
+</html>
