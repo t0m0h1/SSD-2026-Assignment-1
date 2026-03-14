@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Patient Records</title>
+    <link rel="stylesheet" href="../static/style_patient_records.css">
 </head>
 
 <body>
@@ -64,6 +65,10 @@
 {% endfor %}
 
 </table>
+
+<div class="dashboardlink">
+<a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
 
 </body>
 </html>
