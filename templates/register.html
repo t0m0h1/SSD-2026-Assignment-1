@@ -4,30 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background: #f4f6f9;
         }
+
         form {
             max-width: 400px;
             margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
         }
+
         label {
             display: block;
             margin: 10px 0 5px;
         }
+
         input, select, button {
             width: 100%;
             padding: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .weak { color: red; }
+        .medium { color: orange; }
+        .strong { color: green; }
+
+        #strengthText, #matchText {
+            font-weight: bold;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 
 <body>
 
-<h2>Create Account</h2>
+<h2 style="text-align:center;">Create Account</h2>
 
 <form method="POST">
 
@@ -36,6 +65,13 @@
 
     <label for="password">Password</label>
     <input type="password" id="password" name="password" required>
+
+    <div id="strengthText"></div>
+
+    <label for="confirm_password">Confirm Password</label>
+    <input type="password" id="confirm_password" name="confirm_password" required>
+
+    <div id="matchText"></div>
 
     <label for="role">Role</label>
     <select id="role" name="role" required>
@@ -48,7 +84,60 @@
 
 </form>
 
-<a href="/login">Login</a>
+<p style="text-align:center;">
+    <a href="/login">Login</a>
+</p>
+
+<script>
+const passwordInput = document.getElementById("password");
+const confirmInput = document.getElementById("confirm_password");
+const strengthText = document.getElementById("strengthText");
+const matchText = document.getElementById("matchText");
+
+// Password strength checker
+passwordInput.addEventListener("input", () => {
+    const val = passwordInput.value;
+    let score = 0;
+
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[a-z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(val)) score++;
+
+    if (val.length === 0) {
+        strengthText.textContent = "";
+        return;
+    }
+
+    if (score <= 2) {
+        strengthText.textContent = "Weak password";
+        strengthText.className = "weak";
+    } else if (score <= 4) {
+        strengthText.textContent = "Medium password";
+        strengthText.className = "medium";
+    } else {
+        strengthText.textContent = "Strong password";
+        strengthText.className = "strong";
+    }
+});
+
+// Password match checker
+confirmInput.addEventListener("input", () => {
+    if (confirmInput.value.length === 0) {
+        matchText.textContent = "";
+        return;
+    }
+
+    if (confirmInput.value === passwordInput.value) {
+        matchText.textContent = "Passwords match";
+        matchText.style.color = "green";
+    } else {
+        matchText.textContent = "Passwords do not match";
+        matchText.style.color = "red";
+    }
+});
+</script>
 
 </body>
 </html>

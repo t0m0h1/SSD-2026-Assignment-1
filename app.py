@@ -31,7 +31,39 @@ def home():
     return render_template("home.html")
 
 
-# Register
+
+# helper function (for password validation)
+import re
+import time
+
+def is_strong_password(password):
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+
+    if not re.search(r"[A-Z]", password):
+        return False, "Must include an uppercase letter"
+
+    if not re.search(r"[a-z]", password):
+        return False, "Must include a lowercase letter"
+
+    if not re.search(r"[0-9]", password):
+        return False, "Must include a number"
+
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "Must include a special character"
+
+    return True, ""
+    
+
+COMMON_PASSWORDS = ["password", "123456", "qwerty", "admin"]
+
+# Simple in-memory login protection
+login_attempts = {}
+MAX_ATTEMPTS = 5
+LOCKOUT_TIME = 60
+
+
+# Register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -39,15 +71,37 @@ def register():
 
         username = request.form["username"]
         password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
         role = request.form["role"]
 
+        # Check username exists
         existing_user = User.query.filter_by(username=username).first()
-
         if existing_user:
             flash("Username already exists")
             return redirect(url_for("register"))
 
-        hashed_password = generate_password_hash(password)
+        # Password match check
+        if password != confirm_password:
+            flash("Passwords do not match")
+            return redirect(url_for("register"))
+
+        # Common password check
+        if password.lower() in COMMON_PASSWORDS:
+            flash("Password is too common")
+            return redirect(url_for("register"))
+
+        # Strength check
+        valid, message = is_strong_password(password)
+        if not valid:
+            flash(message)
+            return redirect(url_for("register"))
+
+        # Hash password
+        hashed_password = generate_password_hash(
+            password,
+            method='pbkdf2:sha256',
+            salt_length=16
+        )
 
         new_user = User(
             username=username,
@@ -61,13 +115,12 @@ def register():
         log_action(username, "User registered")
 
         flash("Account created. Please login.")
-
         return redirect(url_for("login"))
 
     return render_template("register.html")
 
 
-# Login
+# Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -76,24 +129,45 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
+        ip = request.remote_addr
+
+        # Check lockout
+        if ip in login_attempts:
+            attempts, last_attempt = login_attempts[ip]
+
+            if attempts >= MAX_ATTEMPTS and time.time() - last_attempt < LOCKOUT_TIME:
+                flash("Too many login attempts. Try again later.")
+                return redirect(url_for("login"))
+
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password_hash, password):
 
-            login_user(user)
+            # Reset attempts on success
+            login_attempts.pop(ip, None)
 
+            login_user(user)
             log_action(username, "User logged in")
 
             flash("Logged in successfully")
-
             return redirect(url_for("dashboard"))
 
-        flash("Invalid username or password")
+        else:
+            # Track failed attempts
+            if ip not in login_attempts:
+                login_attempts[ip] = [1, time.time()]
+            else:
+                login_attempts[ip][0] += 1
+                login_attempts[ip][1] = time.time()
+
+            flash("Invalid username or password")
 
     return render_template("login.html")
 
 
-# Logout
+
+
+# Logout 
 @app.route("/logout")
 @login_required
 def logout():
@@ -119,6 +193,7 @@ def dashboard():
     )
 
 
+# Driver code to run app
 if __name__ == "__main__":
 
     with app.app_context():
