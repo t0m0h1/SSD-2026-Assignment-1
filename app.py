@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
+from auth import role_required
 
 from models import db, User, log_action
 from patient_records import patient_bp
@@ -72,7 +73,7 @@ def register():
         username = request.form["username"]
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
-        role = request.form["role"]
+        role = "user"
 
         # Check username exists
         existing_user = User.query.filter_by(username=username).first()
@@ -191,6 +192,14 @@ def dashboard():
         user=current_user.username,
         role=current_user.role
     )
+
+
+# Admin panel
+@app.route("/admin")
+@login_required
+@role_required("admin")
+def admin_panel():
+    return render_template("admin.html")
 
 
 # Driver code to run app

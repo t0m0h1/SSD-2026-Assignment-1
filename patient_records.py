@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime
+from auth import role_required
 
 from models import db, PatientRecord, log_action
 
@@ -9,6 +10,7 @@ patient_bp = Blueprint("patients", __name__)
 
 @patient_bp.route("/patients")
 @login_required
+@role_required( "admin", "doctor")
 def patients():
 
     records = PatientRecord.query.all()
@@ -20,6 +22,7 @@ def patients():
 
 @patient_bp.route("/add_patient", methods=["GET", "POST"])
 @login_required
+@role_required("admin", "doctor")
 def add_patient():
 
     if request.method == "POST":
@@ -50,6 +53,7 @@ def add_patient():
 
 @patient_bp.route("/update_patient/<int:id>", methods=["POST"])
 @login_required
+@role_required("admin", "doctor")
 def update_patient(id):
 
     record = PatientRecord.query.get_or_404(id)
@@ -69,6 +73,7 @@ def update_patient(id):
 
 @patient_bp.route("/delete_patient/<int:id>")
 @login_required
+@role_required("admin")
 def delete_patient(id):
 
     if current_user.role != "admin":
