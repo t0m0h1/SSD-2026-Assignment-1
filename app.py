@@ -32,6 +32,19 @@ def home():
     return render_template("home.html")
 
 
+# helper function (for username validation)
+def is_valid_username(username):
+    if not username:
+        return False, "Username is required"
+
+    if len(username) < 3 or len(username) > 20:
+        return False, "Username must be between 3 and 20 characters"
+
+    if not re.match(r"^[a-zA-Z0-9_]+$", username):
+        return False, "Username can only contain letters, numbers, and underscores"
+
+    return True, ""
+
 
 # helper function (for password validation)
 import re
@@ -70,13 +83,36 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
-        confirm_password = request.form["confirm_password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
         role = "user"
 
-        # Check username exists
-        existing_user = User.query.filter_by(username=username).first()
+        # Empty field check
+        if not username or not password or not confirm_password:
+            flash("All fields are required")
+            return redirect(url_for("register"))
+
+        # Validate username
+        valid, message = is_valid_username(username)
+        if not valid:
+            flash(message)
+            return redirect(url_for("register"))
+
+        # Normalise username (optional but recommended)
+        username = username.lower()
+
+        # Prevent overly large input (DoS protection)
+        if len(password) > 128:
+            flash("Password too long")
+            return redirect(url_for("register"))
+
+        # Check username exists (case-insensitive)
+        from sqlalchemy import func
+        existing_user = User.query.filter(
+            func.lower(User.username) == username.lower()
+        ).first()
+
         if existing_user:
             flash("Username already exists")
             return redirect(url_for("register"))
@@ -104,6 +140,7 @@ def register():
             salt_length=16
         )
 
+        # Create user
         new_user = User(
             username=username,
             password_hash=hashed_password,
@@ -119,6 +156,10 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
+
+
+
 
 
 # Login route
