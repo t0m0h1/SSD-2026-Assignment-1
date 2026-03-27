@@ -19,7 +19,7 @@ def patients():
 
     return render_template("patient_records.html", records=records)
 
-
+# add patient details to the database
 @patient_bp.route("/add_patient", methods=["GET", "POST"])
 @login_required
 @role_required("admin", "doctor")
@@ -50,7 +50,7 @@ def add_patient():
 
     return render_template("add_patient.html")
 
-
+# update patient details in the db
 @patient_bp.route("/update_patient/<int:id>", methods=["POST"])
 @login_required
 @role_required("admin", "doctor")
@@ -70,7 +70,7 @@ def update_patient(id):
 
     return redirect(url_for("patients.patients"))
 
-
+# delete patient details
 @patient_bp.route("/delete_patient/<int:id>")
 @login_required
 @role_required("admin")
