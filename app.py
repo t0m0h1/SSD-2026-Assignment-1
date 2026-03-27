@@ -77,7 +77,9 @@ MAX_ATTEMPTS = 5
 LOCKOUT_TIME = 60
 
 
-# Register route
+
+
+# Register route with new admin code
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -86,7 +88,15 @@ def register():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
+        admin_code_entered = request.form.get("admin_code", "").strip()
+
+        # Default role is user
         role = "user"
+        ADMIN_SECRET_CODE = "123"  # This would be replaced with something much more secure in deployment...
+
+        # assign admin role if correct
+        if admin_code_entered == ADMIN_SECRET_CODE:
+            role = "admin"
 
         # Empty field check
         if not username or not password or not confirm_password:
@@ -99,7 +109,7 @@ def register():
             flash(message)
             return redirect(url_for("register"))
 
-        # Normalise username (optional but recommended)
+        # Normalise username
         username = username.lower()
 
         # Prevent overly large input (DoS protection)
@@ -107,7 +117,7 @@ def register():
             flash("Password too long")
             return redirect(url_for("register"))
 
-        # Check username exists (case-insensitive)
+        # Check if username exists
         from sqlalchemy import func
         existing_user = User.query.filter(
             func.lower(User.username) == username.lower()
@@ -140,7 +150,7 @@ def register():
             salt_length=16
         )
 
-        # Create user
+        # Create user with role
         new_user = User(
             username=username,
             password_hash=hashed_password,
@@ -150,12 +160,13 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        log_action(username, "User registered")
+        log_action(username, f"User registered as {role}")
 
-        flash("Account created. Please login.")
+        flash(f"Account created as {role}. Please login.")
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
 
 
 
@@ -227,12 +238,13 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-
     return render_template(
         "dashboard.html",
         user=current_user.username,
         role=current_user.role
     )
+
+
 
 
 # Admin panel

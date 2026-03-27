@@ -65,23 +65,22 @@
 
     <label for="password">Password</label>
     <input type="password" id="password" name="password" required>
-
     <div id="strengthText"></div>
 
     <label for="confirm_password">Confirm Password</label>
     <input type="password" id="confirm_password" name="confirm_password" required>
-
     <div id="matchText"></div>
 
     <label for="role">Role</label>
     <select id="role" name="role" required>
-        <option value="admin">Admin</option>
         <option value="clinician">Clinician</option>
         <option value="patient">Patient</option>
     </select>
 
-    <button type="submit">Register</button>
+    <label for="admin_code">Admin code (optional)</label>
+    <input type="text" id="admin_code" name="admin_code" placeholder="Enter admin code if applicable">
 
+    <button type="submit">Register</button>
 </form>
 
 <p style="text-align:center;">
@@ -98,7 +97,6 @@ const matchText = document.getElementById("matchText");
 passwordInput.addEventListener("input", () => {
     const val = passwordInput.value;
     let score = 0;
-
     if (val.length >= 8) score++;
     if (/[A-Z]/.test(val)) score++;
     if (/[a-z]/.test(val)) score++;
