@@ -6,7 +6,7 @@ db = SQLAlchemy()
 
 
 class User(UserMixin, db.Model):
-
+    # users.db 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
@@ -14,6 +14,8 @@ class User(UserMixin, db.Model):
 
 
 class PatientRecord(db.Model):
+    # Stored in records.db
+    __bind_key__ = "records"
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -33,19 +35,19 @@ class PatientRecord(db.Model):
 
 
 class AuditLog(db.Model):
+    # Stored in records.db
+    __bind_key__ = "records"
 
     id = db.Column(db.Integer, primary_key=True)
-    user = db.Column(db.String(50))
+    user = db.Column(db.String(50))  # could upgrade to user_id later
     action = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 def log_action(user, action):
-
-    log = AuditLog(
-        user=user,
-        action=action
-    )
-
-    db.session.add(log)
-    db.session.commit()
+    try:
+        log = AuditLog(user=user, action=action)
+        db.session.add(log)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()

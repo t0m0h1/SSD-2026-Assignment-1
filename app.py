@@ -1,23 +1,36 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from auth import role_required
+from sqlalchemy import func
 
+import re
+import time
+
+from auth import role_required
 from models import db, User, log_action
 from patient_records import patient_bp
 
 app = Flask(__name__)
 
+
+# DB Config
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+
+app.config["SQLALCHEMY_BINDS"] = {
+    "records": "sqlite:///records.db"
+}
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
 
 db.init_app(app)
 
+# Login management
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
 
-# Register blueprint
+# Register blueprints
 app.register_blueprint(patient_bp)
 
 
@@ -32,7 +45,7 @@ def home():
     return render_template("home.html")
 
 
-# helper function (for username validation)
+# Username validation
 def is_valid_username(username):
     if not username:
         return False, "Username is required"
@@ -46,10 +59,7 @@ def is_valid_username(username):
     return True, ""
 
 
-# helper function (for password validation)
-import re
-import time
-
+# Password validation
 def is_strong_password(password):
     if len(password) < 8:
         return False, "Password must be at least 8 characters"
@@ -67,19 +77,17 @@ def is_strong_password(password):
         return False, "Must include a special character"
 
     return True, ""
-    
 
-COMMON_PASSWORDS = ["password", "123456", "qwerty", "admin"]
 
-# Simple in-memory login protection
+COMMON_PASSWORDS = ["password", "123456", "qwerty", "admin", "letmein", "welcome", "abc123", "password1", "12345678", "111111"]
+
+# Login protection
 login_attempts = {}
 MAX_ATTEMPTS = 5
 LOCKOUT_TIME = 60
 
 
-
-
-# Register route with new admin code
+# Register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -90,67 +98,54 @@ def register():
         confirm_password = request.form.get("confirm_password", "")
         admin_code_entered = request.form.get("admin_code", "").strip()
 
-        # Default role is user
         role = "user"
-        ADMIN_SECRET_CODE = "123"  # This would be replaced with something much more secure in deployment...
+        ADMIN_SECRET_CODE = "123"
 
-        # assign admin role if correct
         if admin_code_entered == ADMIN_SECRET_CODE:
             role = "admin"
 
-        # Empty field check
         if not username or not password or not confirm_password:
             flash("All fields are required")
             return redirect(url_for("register"))
 
-        # Validate username
         valid, message = is_valid_username(username)
         if not valid:
             flash(message)
             return redirect(url_for("register"))
 
-        # Normalise username
         username = username.lower()
 
-        # Prevent overly large input (DoS protection)
         if len(password) > 128:
             flash("Password too long")
             return redirect(url_for("register"))
 
-        # Check if username exists
-        from sqlalchemy import func
         existing_user = User.query.filter(
-            func.lower(User.username) == username.lower()
+            func.lower(User.username) == username
         ).first()
 
         if existing_user:
             flash("Username already exists")
             return redirect(url_for("register"))
 
-        # Password match check
         if password != confirm_password:
             flash("Passwords do not match")
             return redirect(url_for("register"))
 
-        # Common password check
         if password.lower() in COMMON_PASSWORDS:
             flash("Password is too common")
             return redirect(url_for("register"))
 
-        # Strength check
         valid, message = is_strong_password(password)
         if not valid:
             flash(message)
             return redirect(url_for("register"))
 
-        # Hash password
         hashed_password = generate_password_hash(
             password,
             method='pbkdf2:sha256',
             salt_length=16
         )
 
-        # Create user with role
         new_user = User(
             username=username,
             password_hash=hashed_password,
@@ -168,11 +163,6 @@ def register():
     return render_template("register.html")
 
 
-
-
-
-
-
 # Login route
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -184,7 +174,6 @@ def login():
 
         ip = request.remote_addr
 
-        # Check lockout
         if ip in login_attempts:
             attempts, last_attempt = login_attempts[ip]
 
@@ -196,7 +185,6 @@ def login():
 
         if user and check_password_hash(user.password_hash, password):
 
-            # Reset attempts on success
             login_attempts.pop(ip, None)
 
             login_user(user)
@@ -206,7 +194,6 @@ def login():
             return redirect(url_for("dashboard"))
 
         else:
-            # Track failed attempts
             if ip not in login_attempts:
                 login_attempts[ip] = [1, time.time()]
             else:
@@ -218,9 +205,7 @@ def login():
     return render_template("login.html")
 
 
-
-
-# Logout 
+# Logout route
 @app.route("/logout")
 @login_required
 def logout():
@@ -234,7 +219,7 @@ def logout():
     return redirect(url_for("home"))
 
 
-# Dashboard
+# Route for dashboard
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -245,9 +230,7 @@ def dashboard():
     )
 
 
-
-
-# Admin panel
+# Admin panel route
 @app.route("/admin")
 @login_required
 @role_required("admin")
@@ -255,10 +238,10 @@ def admin_panel():
     return render_template("admin.html")
 
 
-# Driver code to run app
+# Driver code
 if __name__ == "__main__":
 
     with app.app_context():
-        db.create_all()
+        db.create_all()              # users.db
 
     app.run(debug=True)
