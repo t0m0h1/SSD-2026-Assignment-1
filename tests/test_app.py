@@ -24,7 +24,8 @@ def client():
             db.drop_all()
 
 
-# test for valid username
+
+# 3 tests for valid username
 def test_invalid_username_short():
     valid, msg = is_valid_username("ab")
     assert not valid
@@ -39,15 +40,17 @@ def test_valid_username():
 
 
 
-
+# test for pwd strength
 def test_password_too_short():
     valid, _ = is_strong_password("Ab1!")
     assert not valid
 
+# test for pwd missing lowercase
 def test_password_missing_uppercase():
     valid, _ = is_strong_password("password123!")
     assert not valid
 
+# test for pwd missing uppercase
 def test_password_valid():
     valid, _ = is_strong_password("StrongPass1!")
     assert valid
@@ -82,6 +85,16 @@ def test_login(client):
     }, follow_redirects=True)
 
     assert response.status_code == 200
+
+
+# test for login with invalid credentials
+def test_login_invalid(client):
+    response = client.post("/login", data={
+        "username": "wrong",
+        "password": "wrong"
+    }, follow_redirects=True)
+
+    assert b"Invalid username or password" in response.data
 
 
 
