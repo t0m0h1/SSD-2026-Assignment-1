@@ -17,6 +17,8 @@ A secure Flask web application for managing patient records with authentication 
 ## Run the App
 in bash:
 
+Navigate to the working directory
+
 pip install -r requirements.txt
 
 python app.py
@@ -24,3 +26,11 @@ python app.py
 (use a virtual environment if needed)
 
 (use specific pip relevant to the python version, e.g. pip3.12 install ...)
+
+
+## Run the unit tests
+in bash:
+
+pip install (any required dependencies) 
+
+python test_app.py
