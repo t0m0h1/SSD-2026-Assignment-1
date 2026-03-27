@@ -27,3 +27,7 @@ a:hover {
 hr {
     width: 200px;
 }
+
+#logout {
+    margin-top: 20px;
+}

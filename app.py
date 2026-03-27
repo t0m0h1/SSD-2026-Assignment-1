@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func
+from datetime import datetime
+from models import db, User, Appointment, log_action
 
 import re
 import time
@@ -238,10 +240,57 @@ def admin_panel():
     return render_template("admin.html")
 
 
+
+# 
+@app.route("/appointments")
+@login_required
+def view_appointments():
+    if current_user.role == "patient":
+        appointments = Appointment.query.filter_by(patient_id=current_user.id).all()
+    else:
+        appointments = Appointment.query.all()
+
+    return render_template("appointments.html", appointments=appointments)
+
+
+
+@app.route("/book_appointment", methods=["GET", "POST"])
+@login_required
+def book_appointment():
+    if current_user.role != "patient":
+        abort(403)
+
+    if request.method == "POST":
+        date_time_str = request.form.get("date_time")
+        reason = request.form.get("reason")
+
+        try:
+            date_time = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M")
+        except:
+            flash("Invalid date/time format")
+            return redirect(url_for("book_appointment"))
+
+        appointment = Appointment(
+            patient_id=current_user.id,
+            date_time=date_time,
+            reason=reason
+        )
+
+        db.session.add(appointment)
+        db.session.commit()
+
+        flash("Appointment booked successfully")
+        return redirect(url_for("view_appointments"))
+
+    return render_template("book_appointment.html")
+
+
+
+
 # Driver code
 if __name__ == "__main__":
 
     with app.app_context():
-        db.create_all()              # users.db
+        db.create_all()              # users.db and records.db 
 
     app.run(debug=True)

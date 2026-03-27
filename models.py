@@ -51,3 +51,15 @@ def log_action(user, action):
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+
+
+
+class Appointment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date_time = db.Column(db.DateTime, nullable=False)
+    reason = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    patient = db.relationship("User", backref="appointments")
